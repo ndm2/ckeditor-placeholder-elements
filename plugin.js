@@ -51,7 +51,7 @@
 			for(var i = 0; i < placeholders.length; i ++)
 			{
 				uiMenuItems[placeholders[i].value] = {
-					label: placeholders[i].title,
+					label: placeholders[i].label,
 					value: config.startDelimiter + placeholders[i].value + config.endDelimiter,
 					group: menuGroup,
 					onClick: function()
@@ -100,8 +100,8 @@
 								var placeholder = placeholders[i];
 								this.add(
 									config.startDelimiter + placeholder.value + config.endDelimiter,
-									placeholder.title,
-									placeholder.title
+									placeholder.label,
+									placeholder.label
 								);
 							}
 						},

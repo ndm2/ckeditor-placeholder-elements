@@ -41,17 +41,17 @@ config.placeholder_elements = {
 	draggable: false,
 
 	/**
-	 * A list of placeholders, defined as objects with `title` and `value`
-	 * properties, where the title is being displayed in the menu, and value
+	 * A list of placeholders, defined as objects with `label` and `value`
+	 * properties, where the label is being displayed in the menu, and value
 	 * is used as the placeholder text.
 	 *
 	 * Note that delimiters are added automatically, so the value should be
 	 * defined without.
 	 *
 	 * [
-	 *     {title: 'Placeholder 1', value: 'PLACEHOLDER_1'},
-	 *     {title: 'Placeholder 2', value: 'PLACEHOLDER_2'},
-	 *     {title: 'Placeholder 3', value: 'PLACEHOLDER_3'},
+	 *     {label: 'Placeholder 1', value: 'PLACEHOLDER_1'},
+	 *     {label: 'Placeholder 2', value: 'PLACEHOLDER_2'},
+	 *     {label: 'Placeholder 3', value: 'PLACEHOLDER_3'},
 	 *     // ...
 	 * ]
 	 */
