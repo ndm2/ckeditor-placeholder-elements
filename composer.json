@@ -1,0 +1,18 @@
+{
+	"name": "ndm2/ckeditor-placeholder-elements",
+	"description": "CKEditor Placeholder Elements Plugin",
+	"type": "library",
+	"keywords": ["ckeditor", "placeholder", "plugin"],
+	"homepage": "https://github.com/ndm2/ckeditor-placeholder-elements",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Oliver Nowak",
+			"homepage": "https://github.com/ndm2"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/ndm2/ckeditor-placeholder-elements/issues",
+		"source": "https://github.com/ndm2/ckeditor-placeholder-elements"
+	}
+}
