@@ -70,12 +70,38 @@ config.placeholder_elements = {
 	 * is used as the placeholder text.
 	 *
 	 * Note that delimiters are added automatically, so the value should be
-	 * defined without.
+	 * defined without!
 	 *
 	 * [
 	 *     {label: 'Placeholder 1', value: 'PLACEHOLDER_1'},
 	 *     {label: 'Placeholder 2', value: 'PLACEHOLDER_2'},
 	 *     {label: 'Placeholder 3', value: 'PLACEHOLDER_3'},
+	 *     // ...
+	 * ]
+	 *
+	 * When using the `combo` UI type, it's also possible to define groups
+	 * using the `group` and `placeholders` keys, where `group` defines the
+	 * title of group that is displayed in the menu, and `placeholders` is an
+	 * array that holds the groups placeholders.
+	 *
+	 * Note that grouping is only a visual thing, placeholder values must still
+	 * be unique!
+	 *
+	 * [
+	 *     {
+	 *         group: 'Group 1',
+	 *         placeholders: [
+	 *             {label: 'Placeholder 1', value: 'PLACEHOLDER_1'},
+	 *             {label: 'Placeholder 2', value: 'PLACEHOLDER_2'}
+	 *         ]
+	 *     },
+	 *     {
+	 *         group: 'Group 2',
+	 *         placeholders: [
+	 *             {label: 'Placeholder 3', value: 'PLACEHOLDER_4'},
+	 *             {label: 'Placeholder 4', value: 'PLACEHOLDER_5'}
+	 *         ]
+	 *     },
 	 *     // ...
 	 * ]
 	 */

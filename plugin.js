@@ -21,6 +21,24 @@
 		return value.replace(/[\\\^\$\*\+\?\.\(\)\|\{\}\[\]]/g, '\\$&');
 	}
 
+	/**
+	 * Checks whether the given placeholders contain any groups.
+	 *
+	 * @param {Object[]} placeholders
+	 * @returns {boolean}
+	 */
+	function hasGroups(placeholders)
+	{
+		for(var i = 0; i < placeholders.length; i ++)
+		{
+			if('group' in placeholders[i])
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	CKEDITOR.plugins.add('placeholder_elements', {
 		hidpi: true,
 		icons: 'placeholderelements',
@@ -94,15 +112,35 @@
 
 						init: function()
 						{
-							this.startGroup(lang.label);
+							if(!hasGroups(placeholders))
+							{
+								this.startGroup(lang.label);
+							}
+
 							for(var i = 0; i < placeholders.length; i ++)
 							{
 								var placeholder = placeholders[i];
-								this.add(
-									config.startDelimiter + placeholder.value + config.endDelimiter,
-									placeholder.label,
-									placeholder.label
-								);
+								if('group' in placeholder)
+								{
+									this.startGroup(placeholder.group);
+									for(var j = 0; j < placeholder.placeholders.length; j ++)
+									{
+										var groupedPlaceholder = placeholder.placeholders[j];
+										this.add(
+											config.startDelimiter + groupedPlaceholder.value + config.endDelimiter,
+											groupedPlaceholder.label,
+											groupedPlaceholder.label
+										);
+									}
+								}
+								else
+								{
+									this.add(
+										config.startDelimiter + placeholder.value + config.endDelimiter,
+										placeholder.label,
+										placeholder.label
+									);
+								}
 							}
 						},
 
@@ -143,7 +181,18 @@
 			var placeholderMatches = [];
 			for(var i = 0; i < placeholders.length; i ++)
 			{
-				placeholderMatches.push(regexQuote(placeholders[i].value));
+				var placeholder = placeholders[i];
+				if('group' in placeholder)
+				{
+					for(var j = 0; j < placeholder.placeholders.length; j ++)
+					{
+						placeholderMatches.push(regexQuote(placeholder.placeholders[j].value));
+					}
+				}
+				else
+				{
+					placeholderMatches.push(regexQuote(placeholder.value));
+				}
 			}
 
 			var startDelimiter = regexQuote(config.startDelimiter);
