@@ -39,6 +39,8 @@
 		return false;
 	}
 
+	var placeholdersRegex;
+
 	CKEDITOR.plugins.add('placeholder_elements', {
 		hidpi: true,
 		icons: 'placeholderelements',
@@ -58,15 +60,39 @@
 			var config = editor.config.placeholder_elements = CKEDITOR.tools.extend(editor.config.placeholder_elements || {}, defaults);
 			var lang = editor.lang.placeholder_elements;
 
+			var placeholders = config.placeholders;
+			var placeholderMatches = [];
+			var placeholdersValueLabelMap = {};
+			for(var i = 0; i < placeholders.length; i ++)
+			{
+				var placeholder = placeholders[i];
+				if('group' in placeholder)
+				{
+					for(var j = 0; j < placeholder.placeholders.length; j ++)
+					{
+						placeholderMatches.push(regexQuote(placeholder.placeholders[j].value));
+						placeholdersValueLabelMap[config.startDelimiter + placeholder.placeholders[j].value + config.endDelimiter] = placeholder.placeholders[j].label;
+					}
+				}
+				else
+				{
+					placeholderMatches.push(regexQuote(placeholder.value));
+					placeholdersValueLabelMap[config.startDelimiter + placeholder.value + config.endDelimiter] = placeholder.label;
+				}
+			}
+
+			var startDelimiter = regexQuote(config.startDelimiter);
+			var endDelimiter = regexQuote(config.endDelimiter);
+			placeholdersRegex = '(' + startDelimiter + '(' + placeholderMatches.join('|') + ')' + endDelimiter + ')';
+
 			CKEDITOR.addCss(config.css);
 
 			var menuGroup = 'placeholderElementsButton';
 			editor.addMenuGroup(menuGroup);
 
-			var placeholders = config.placeholders;
 			var uiMenuItems = {};
 			var uiMenuItemStates = {};
-			for(var i = 0; i < placeholders.length; i ++)
+			for(i = 0; i < placeholders.length; i ++)
 			{
 				uiMenuItems[placeholders[i].value] = {
 					label: placeholders[i].label,
@@ -147,6 +173,30 @@
 						onClick: function(value)
 						{
 							editor.insertText(value);
+						},
+
+						onRender: function()
+						{
+							editor.on('selectionChange', function(ev)
+								{
+									var regexp = new RegExp('^' + placeholdersRegex + '$');
+									var currentValue = this.getValue();
+
+									var elements = ev.data.path.elements;
+									for(var i = 0; i < elements.length; i ++)
+									{
+										var element = elements[i];
+										var text = element.$.innerText.toString();
+										if(text !== currentValue && text.match(regexp))
+										{
+											this.setValue(text, placeholdersValueLabelMap[text]);
+											return;
+										}
+									}
+
+									this.setValue('');
+								},
+								this);
 						}
 					});
 					break;
@@ -175,32 +225,7 @@
 
 		afterInit: function(editor)
 		{
-			var config = editor.config.placeholder_elements;
-			var placeholders = config.placeholders;
-
-			var placeholderMatches = [];
-			for(var i = 0; i < placeholders.length; i ++)
-			{
-				var placeholder = placeholders[i];
-				if('group' in placeholder)
-				{
-					for(var j = 0; j < placeholder.placeholders.length; j ++)
-					{
-						placeholderMatches.push(regexQuote(placeholder.placeholders[j].value));
-					}
-				}
-				else
-				{
-					placeholderMatches.push(regexQuote(placeholder.value));
-				}
-			}
-
-			var startDelimiter = regexQuote(config.startDelimiter);
-			var endDelimiter = regexQuote(config.endDelimiter);
-
-			var regexp = new RegExp(
-				'(' + startDelimiter + '(' + placeholderMatches.join('|') + ')' + endDelimiter + ')', 'g'
-			);
+			var regexp = new RegExp(placeholdersRegex, 'g');
 
 			editor.dataProcessor.dataFilter.addRules({
 				text: function(text, node)
