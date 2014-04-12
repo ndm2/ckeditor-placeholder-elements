@@ -39,7 +39,47 @@
 		return false;
 	}
 
+	/**
+	 * Iterates over all placeholders in the given list, and invokes the
+	 * callback function for every placeholder, where the placeholder object
+	 * is passed as a parameter.
+	 *
+	 * When a group is encountered, the callback receives an additional
+	 * argument for the first placeholder in the group, containing the title
+	 * of the group.
+	 *
+	 * @param {Object[]} placeholders
+	 * @param {function(Object,string=)} callback
+	 */
+	function processPlaceholders(placeholders, callback)
+	{
+		for(var i = 0; i < placeholders.length; i ++)
+		{
+			var placeholder = placeholders[i];
+			if('group' in placeholder)
+			{
+				for(var j = 0; j < placeholder.placeholders.length; j ++)
+				{
+					var groupedPlaceholder = placeholder.placeholders[j];
+					if(j === 0)
+					{
+						callback(groupedPlaceholder, placeholder.group);
+					}
+					else
+					{
+						callback(groupedPlaceholder);
+					}
+				}
+			}
+			else
+			{
+				callback(placeholder);
+			}
+		}
+	}
+
 	var placeholdersRegex;
+	var placeholdersMap = {};
 
 	CKEDITOR.plugins.add('placeholder_elements', {
 		hidpi: true,
@@ -58,58 +98,49 @@
 				uiType: 'button'
 			};
 			var config = editor.config.placeholder_elements = CKEDITOR.tools.extend(editor.config.placeholder_elements || {}, defaults);
-			var lang = editor.lang.placeholder_elements;
-
 			var placeholders = config.placeholders;
-			var placeholderMatches = [];
-			var placeholdersValueLabelMap = {};
-			for(var i = 0; i < placeholders.length; i ++)
-			{
-				var placeholder = placeholders[i];
-				if('group' in placeholder)
-				{
-					for(var j = 0; j < placeholder.placeholders.length; j ++)
-					{
-						placeholderMatches.push(regexQuote(placeholder.placeholders[j].value));
-						placeholdersValueLabelMap[config.startDelimiter + placeholder.placeholders[j].value + config.endDelimiter] = placeholder.placeholders[j].label;
-					}
-				}
-				else
-				{
-					placeholderMatches.push(regexQuote(placeholder.value));
-					placeholdersValueLabelMap[config.startDelimiter + placeholder.value + config.endDelimiter] = placeholder.label;
-				}
-			}
 
+			var placeholderMatches = [];
+			processPlaceholders(placeholders, function(placeholder)
+			{
+				placeholderMatches.push(regexQuote(placeholder.value));
+			});
 			var startDelimiter = regexQuote(config.startDelimiter);
 			var endDelimiter = regexQuote(config.endDelimiter);
 			placeholdersRegex = '(' + startDelimiter + '(' + placeholderMatches.join('|') + ')' + endDelimiter + ')';
 
+			processPlaceholders(placeholders, function(placeholder)
+			{
+				placeholdersMap[config.startDelimiter + placeholder.value + config.endDelimiter] = placeholder;
+			});
+
 			CKEDITOR.addCss(config.css);
 
-			var menuGroup = 'placeholderElementsButton';
-			editor.addMenuGroup(menuGroup);
-
-			var uiMenuItems = {};
-			var uiMenuItemStates = {};
-			for(i = 0; i < placeholders.length; i ++)
-			{
-				uiMenuItems[placeholders[i].value] = {
-					label: placeholders[i].label,
-					value: config.startDelimiter + placeholders[i].value + config.endDelimiter,
-					group: menuGroup,
-					onClick: function()
-					{
-						editor.insertText(this.value);
-					}
-				};
-				uiMenuItemStates[placeholders[i].value] = CKEDITOR.TRISTATE_OFF;
-			}
-			editor.addMenuItems(uiMenuItems);
-
+			var lang = editor.lang.placeholder_elements;
 			switch(config.uiType)
 			{
 				case 'button':
+					var menuGroup = 'placeholderElementsButton';
+					editor.addMenuGroup(menuGroup);
+
+					var uiMenuItems = {};
+					var uiMenuItemStates = {};
+
+					processPlaceholders(placeholders, function(placeholder)
+					{
+						uiMenuItems[placeholder.value] = {
+							label: placeholder.label,
+							value: config.startDelimiter + placeholder.value + config.endDelimiter,
+							group: menuGroup,
+							onClick: function()
+							{
+								editor.insertText(this.value);
+							}
+						};
+						uiMenuItemStates[placeholder.value] = CKEDITOR.TRISTATE_OFF;
+					});
+					editor.addMenuItems(uiMenuItems);
+
 					editor.ui.add('PlaceholderElements', CKEDITOR.UI_MENUBUTTON, {
 						label: lang.label,
 						title: lang.title,
@@ -143,31 +174,20 @@
 								this.startGroup(lang.label);
 							}
 
-							for(var i = 0; i < placeholders.length; i ++)
+							var self = this;
+							processPlaceholders(placeholders, function(placeholder, groupName)
 							{
-								var placeholder = placeholders[i];
-								if('group' in placeholder)
+								if(groupName !== undefined)
 								{
-									this.startGroup(placeholder.group);
-									for(var j = 0; j < placeholder.placeholders.length; j ++)
-									{
-										var groupedPlaceholder = placeholder.placeholders[j];
-										this.add(
-											config.startDelimiter + groupedPlaceholder.value + config.endDelimiter,
-											groupedPlaceholder.label,
-											groupedPlaceholder.label
-										);
-									}
+									self.startGroup(groupName);
 								}
-								else
-								{
-									this.add(
-										config.startDelimiter + placeholder.value + config.endDelimiter,
-										placeholder.label,
-										placeholder.label
-									);
-								}
-							}
+
+								self.add(
+									config.startDelimiter + placeholder.value + config.endDelimiter,
+									placeholder.label,
+									placeholder.label
+								);
+							});
 						},
 
 						onClick: function(value)
@@ -178,25 +198,25 @@
 						onRender: function()
 						{
 							editor.on('selectionChange', function(ev)
+							{
+								var regexp = new RegExp('^' + placeholdersRegex + '$');
+								var currentValue = this.getValue();
+
+								var elements = ev.data.path.elements;
+								for(var i = 0; i < elements.length; i ++)
 								{
-									var regexp = new RegExp('^' + placeholdersRegex + '$');
-									var currentValue = this.getValue();
-
-									var elements = ev.data.path.elements;
-									for(var i = 0; i < elements.length; i ++)
+									var element = elements[i];
+									var text = element.$.innerText.toString();
+									if(text !== currentValue && text.match(regexp))
 									{
-										var element = elements[i];
-										var text = element.$.innerText.toString();
-										if(text !== currentValue && text.match(regexp))
-										{
-											this.setValue(text, placeholdersValueLabelMap[text]);
-											return;
-										}
+										this.setValue(text, placeholdersMap[text].label);
+										return;
 									}
+								}
 
-									this.setValue('');
-								},
-								this);
+								this.setValue('');
+							},
+							this);
 						}
 					});
 					break;
@@ -211,7 +231,7 @@
 					this.setData('name', this.element.getText());
 				},
 
-				data: function(data)
+				data: function()
 				{
 					this.element.setText(this.data.name);
 				},
@@ -228,7 +248,7 @@
 			var regexp = new RegExp(placeholdersRegex, 'g');
 
 			editor.dataProcessor.dataFilter.addRules({
-				text: function(text, node)
+				text: function(text)
 				{
 					return text.replace(regexp, function(match)
 					{
