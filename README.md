@@ -31,7 +31,6 @@ You can either
 If you can't install the plugin directly in the CKEditor plugin folder, use
 [`CKEDITOR.plugins.addExternal()`](http://docs.ckeditor.com/#!/api/CKEDITOR.resourceManager-method-addExternal) to
 point the editor to the directory where you've placed the plugin.
-```
 
 
 ### Configuration
