@@ -21,26 +21,18 @@ This plugins requires CKEditor 4.3+ and the following plugins:
 
 ### Installation
 
-Clone the repository into `ckeditor/plugins/placeholder_elements/` or use composer in combination with
-[mnsami/composer-installer-plugin](https://github.com/mnsami/composer-installer-plugin):
+You can either
 
-```js
-{
-	"repositories": [{
-		"type": "git",
-		"url": "https://github.com/mnsami/composer-installer-plugin"
-	}],
-	"require": {
-		"mnsami/composer-custom-directory-installer": "dev-master",
-		"ndm2/ckeditor-placeholder-elements": "1.*"
-	},
-	"extra": {
-		"installer-paths": {
-			"path/to/ckeditor/plugins/placeholder_elements": ["ndm2/ckeditor-placeholder-elements"]
-		}
-	}
-}
+* clone or download and unpack the repository into `ckeditor/plugins/placeholder_elements/`
+* use [Bower](http://bower.io)
+* or [Composer](https://getcomposer.org) (optionally in combination with
+[mnsami/composer-installer-plugin](https://github.com/mnsami/composer-installer-plugin))
+
+If you can't install the plugin directly in the CKEditor plugin folder, use
+[`CKEDITOR.plugins.addExternal()`](http://docs.ckeditor.com/#!/api/CKEDITOR.resourceManager-method-addExternal) to
+point the editor to the directory where you've placed the plugin.
 ```
+
 
 ### Configuration
 

@@ -1,6 +1,6 @@
 {
 	"name": "ndm2/ckeditor-placeholder-elements",
-	"description": "CKEditor Placeholder Elements Plugin",
+	"description": "A CKEditor plugin that adds support for predefined placeholder elements.",
 	"type": "library",
 	"keywords": ["ckeditor", "placeholder", "plugin"],
 	"homepage": "https://github.com/ndm2/ckeditor-placeholder-elements",
