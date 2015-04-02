@@ -1,7 +1,6 @@
 {
 	"name": "ndm2-ckeditor-placeholder-elements",
 	"description": "A CKEditor plugin that adds support for predefined placeholder elements.",
-	"version": "1.0.2",
 	"main": [
 		"icons/hidpi/placeholderelements.png",
 		"icons/placeholderelements.png",
