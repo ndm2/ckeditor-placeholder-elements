@@ -1,5 +1,8 @@
 # CKEditor Placeholder Elements Plugin
 
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.txt)
+[![Build Status](https://img.shields.io/travis/ndm2/ckeditor-placeholder-elements/master.svg?style=flat-square)](https://travis-ci.org/ndm2/ckeditor-placeholder-elements)
+
 This is a [CKEditor](http://ckeditor.com/) plugin that adds support for predefined placeholder elements.
 
 
