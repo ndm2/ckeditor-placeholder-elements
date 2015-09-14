@@ -714,12 +714,10 @@
 								for(var i = 0; i < elements.length; i ++)
 								{
 									var element = elements[i];
-									if (element.$.innerText !== undefined) {
-										var text = element.$.innerText.toString();
-										if (text !== currentValue && text.match(placeholdersRegexExact)) {
-											this.setValue(text, placeholdersMap[text].label);
-											return;
-										}
+									var text = element.$.textContent.toString();
+									if (text !== currentValue && text.match(placeholdersRegexExact)) {
+										this.setValue(text, placeholdersMap[text].label);
+										return;
 									}
 								}
 
