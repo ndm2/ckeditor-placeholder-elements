@@ -20,5 +20,8 @@
 			"name": "Oliver Nowak",
 			"homepage": "https://github.com/ndm2"
 		}
-	]
+	],
+	"devDependencies": {
+		"ckeditor": "4"
+	}
 }
