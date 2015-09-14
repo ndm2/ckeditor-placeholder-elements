@@ -324,6 +324,8 @@
 
 		var items = [];
 
+		var suppressEvents = false;
+
 		/**
 		 * Adds a placeholder.
 		 *
@@ -334,7 +336,7 @@
 		{
 			var old = this.toArray();
 			items.push(placeholder);
-			this.fire('change', {placeholders: old});
+			if(!suppressEvents) this.fire('change', {placeholders: old});
 			return items.length;
 		};
 
@@ -349,7 +351,7 @@
 		{
 			var old = this.toArray();
 			items.splice(index, 0, placeholder);
-			this.fire('change', {placeholders: old});
+			if (!suppressEvents) this.fire('change', { placeholders: old });
 			return items.length;
 		};
 
@@ -524,7 +526,7 @@
 			{
 				var old = this.toArray();
 				items.splice(index, 1);
-				this.fire('change', {placeholders: old});
+				if (!suppressEvents) this.fire('change', { placeholders: old });
 			}
 			return items.length;
 		};
@@ -547,6 +549,37 @@
 		this.toArray = function()
 		{
 			return items.slice();
+		};
+
+		/**
+		 * Replace the elements of this collection with the supplied array.
+		 * @param {Placeholder[]}
+		 * @returns {number} The new length of the collection.
+		 */
+		this.fromArray = function (placeholders) {
+		    if(!(placeholders instanceof Array)) return items.length;
+
+		    var old = this.toArray();
+
+		    suppressEvents = true;
+
+		    items = [];
+
+		    for (var x = 0; x < placeholders.length; x++) {
+		        var placeholder = placeholders[x];
+
+		        if (placeholder.group !== undefined && this.getGroupRange(placeholder.group) !== null) {
+		            this.addToGroup(placeholder);
+		        }
+		        else {
+		            this.add(placeholder);
+		        }
+		    }
+
+		    suppressEvents = false;
+
+		    this.fire('change', { placeholders: old });
+		    return items.length;
 		};
 	}
 
@@ -681,11 +714,12 @@
 								for(var i = 0; i < elements.length; i ++)
 								{
 									var element = elements[i];
-									var text = element.$.innerText.toString();
-									if(text !== currentValue && text.match(placeholdersRegexExact))
-									{
-										this.setValue(text, placeholdersMap[text].label);
-										return;
+									if (element.$.innerText !== undefined) {
+										var text = element.$.innerText.toString();
+										if (text !== currentValue && text.match(placeholdersRegexExact)) {
+											this.setValue(text, placeholdersMap[text].label);
+											return;
+										}
 									}
 								}
 
