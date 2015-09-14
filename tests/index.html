@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Test Suite</title>
+		<link rel="stylesheet" href="../node_modules/qunitjs/qunit/qunit.css">
+		<script src="../node_modules/qunitjs/qunit/qunit.js"></script>
+		<script src='../bower_components/ckeditor/ckeditor.js'></script>
+	</head>
+	<body>
+		<textarea id='textarea1'></textarea>
+		<script>
+			QUnit.test('wait for editor', function(assert) {
+				var done = assert.async();
+
+				CKEDITOR.plugins.addExternal('placeholder_elements', '../../');
+				CKEDITOR
+					.replace('textarea1', {
+						extraPlugins: 'placeholder_elements',
+						placeholder_elements: {
+							placeholders: [],
+							uiType: 'combo'
+						}
+					})
+					.on('instanceReady', function()
+					{
+						assert.ok(true, 'editor instance ready');
+						done();
+
+						var plugin = CKEDITOR.instances.textarea1.plugins.placeholder_elements;
+						var PlaceholdersCollectionClass = plugin.placeholders.__proto__.constructor;
+
+						QUnit.test('add() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							collection.add(fooPlaceholder);
+							var expected = [
+								fooPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							var barPlaceholder = {label: 'bar', 'value': 'BAR'};
+							collection.add(barPlaceholder);
+							expected = [
+								fooPlaceholder,
+								barPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+						});
+
+						QUnit.test('addAll() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var placeholders = [
+								{label: 'foo', 'value': 'FOO'},
+								{label: 'bar', 'value': 'BAR'},
+								{label: 'baz', 'value': 'BAZ'},
+								{label: 'zap', 'value': 'ZAP', group: 'Group 1'}
+							];
+
+							collection.addAll(placeholders);
+
+							var expected = [
+								placeholders[0],
+								placeholders[1],
+								placeholders[2],
+								placeholders[3]
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							collection.reset();
+
+							var yipPlaceholder = {label: 'yip', 'value': 'YIP', group: 'Group 1'};
+							collection.add(yipPlaceholder);
+							collection.addAll(placeholders);
+
+							expected = [
+								yipPlaceholder,
+								placeholders[3],
+								placeholders[0],
+								placeholders[1],
+								placeholders[2]
+							];
+							assert.deepEqual(collection.toArray(), expected);
+						});
+
+						QUnit.test('addAt() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP'};
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							collection.addAt(1, bazPlaceholder);
+							expected = [
+								fooPlaceholder,
+								bazPlaceholder,
+								barPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							collection.addAt(0, zapPlaceholder);
+							expected = [
+								zapPlaceholder,
+								fooPlaceholder,
+								bazPlaceholder,
+								barPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+						});
+
+						QUnit.test('addToGroup() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO', group: 'Group 1'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR', group: 'Group 1'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ', group: 'Group 2'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP', group: 'Group 2'};
+
+							collection.add(fooPlaceholder);
+							collection.add(bazPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								bazPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							collection.addToGroup(barPlaceholder);
+							expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								bazPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							collection.addToGroup(zapPlaceholder);
+							expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								bazPlaceholder,
+								zapPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+						});
+
+						QUnit.test('addToGroupAt() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO', group: 'Group 1'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR', group: 'Group 1'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ', group: 'Group 1'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP', group: 'Group 2'};
+							var binPlaceholder = {label: 'bin', 'value': 'BIN', group: 'Group 2'};
+							var etcPlaceholder = {label: 'etc', 'value': 'ETC', group: 'Group 2'};
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+							collection.add(zapPlaceholder);
+							collection.add(binPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								zapPlaceholder,
+								binPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							collection.addToGroupAt(1, bazPlaceholder);
+							expected = [
+								fooPlaceholder,
+								bazPlaceholder,
+								barPlaceholder,
+								zapPlaceholder,
+								binPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							collection.addToGroupAt(0, etcPlaceholder);
+							expected = [
+								fooPlaceholder,
+								bazPlaceholder,
+								barPlaceholder,
+								etcPlaceholder,
+								zapPlaceholder,
+								binPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+						});
+
+						QUnit.test('getAt() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP'};
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+							collection.add(bazPlaceholder);
+							collection.add(zapPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								bazPlaceholder,
+								zapPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							var result = collection.getAt(1);
+							expected = barPlaceholder;
+							assert.equal(result, expected);
+
+							result = collection.getAt(-1);
+							expected = null;
+							assert.equal(result, expected);
+
+							result = collection.getAt(4);
+							expected = null;
+							assert.equal(result, expected);
+						});
+
+						QUnit.test('getGroupRange() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO', group: 'Group 1'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR', group: 'Group 1'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ', group: 'Group 1'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP', group: 'Group 2'};
+							var binPlaceholder = {label: 'bin', 'value': 'BIN', group: 'Group 2'};
+							var etcPlaceholder = {label: 'etc', 'value': 'ETC', group: 'Group 2'};
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+							collection.add(bazPlaceholder);
+							collection.add(zapPlaceholder);
+							collection.add(binPlaceholder);
+							collection.add(etcPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								bazPlaceholder,
+								zapPlaceholder,
+								binPlaceholder,
+								etcPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							var result = collection.getGroupRange('Group 1');
+							expected = {begin: 0, end: 2};
+							assert.deepEqual(result, expected);
+
+							result = collection.getGroupRange('Group 2');
+							expected = {begin: 3, end: 5};
+							assert.deepEqual(result, expected);
+
+							result = collection.getGroupRange('Non existent group');
+							expected = null;
+							assert.equal(result, expected);
+						});
+
+						QUnit.test('hasGroup() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR', group: 'Group 1'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP'};
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+							collection.add(bazPlaceholder);
+							collection.add(zapPlaceholder);
+
+							assert.ok(collection.hasGroup('Group 1'));
+							assert.notOk(collection.hasGroup('Group 2'));
+						});
+
+						QUnit.test('indexOf() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP'};
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+							collection.add(bazPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								bazPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							var result = collection.indexOf(fooPlaceholder);
+							expected = 0;
+							assert.equal(result, expected);
+
+							result = collection.indexOf(bazPlaceholder);
+							expected = 2;
+							assert.equal(result, expected);
+
+							result = collection.indexOf(zapPlaceholder);
+							expected = -1;
+							assert.equal(result, expected);
+						});
+
+						QUnit.test('indexOfInGroup() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO', group: 'Group 1'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR', group: 'Group 1'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ', group: 'Group 2'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP', group: 'Group 2'};
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+							collection.add(bazPlaceholder);
+							collection.add(zapPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								bazPlaceholder,
+								zapPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							var result = collection.indexOfInGroup(fooPlaceholder);
+							expected = 0;
+							assert.equal(result, expected);
+
+							result = collection.indexOfInGroup(barPlaceholder);
+							expected = 1;
+							assert.equal(result, expected);
+
+							result = collection.indexOfInGroup(bazPlaceholder);
+							expected = 0;
+							assert.equal(result, expected);
+
+							result = collection.indexOfInGroup(zapPlaceholder);
+							expected = 1;
+							assert.equal(result, expected);
+						});
+
+						QUnit.test('remove() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ', group: 'Group'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP', group: 'Group'};
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+							collection.add(bazPlaceholder);
+							collection.add(zapPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								bazPlaceholder,
+								zapPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							var result = collection.remove(fooPlaceholder);
+							expected = 3;
+							assert.deepEqual(result, expected);
+							expected = [
+								barPlaceholder,
+								bazPlaceholder,
+								zapPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							result = collection.remove(bazPlaceholder);
+							expected = 2;
+							assert.deepEqual(result, expected);
+							expected = [
+								barPlaceholder,
+								zapPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+						});
+
+						QUnit.test('removeAt() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ', group: 'Group'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP', group: 'Group'};
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+							collection.add(bazPlaceholder);
+							collection.add(zapPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								bazPlaceholder,
+								zapPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							var result = collection.removeAt(0);
+							expected = 3;
+							assert.deepEqual(result, expected);
+							expected = [
+								barPlaceholder,
+								bazPlaceholder,
+								zapPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							result = collection.removeAt(1);
+							expected = 2;
+							assert.deepEqual(result, expected);
+							expected = [
+								barPlaceholder,
+								zapPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+						});
+
+						QUnit.test('reset() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP'};
+
+							var result = collection.length();
+							expected = 0;
+							assert.equal(result, expected);
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+							collection.add(bazPlaceholder);
+							collection.add(zapPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								bazPlaceholder,
+								zapPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							collection.reset();
+
+							expected = [];
+							assert.deepEqual(collection.toArray(), expected);
+
+							result = collection.length();
+							expected = 0;
+							assert.equal(result, expected);
+						});
+
+						QUnit.test('length() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP'};
+
+							var result = collection.length();
+							expected = 0;
+							assert.equal(result, expected);
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+							collection.add(bazPlaceholder);
+							collection.add(zapPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								bazPlaceholder,
+								zapPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							result = collection.length();
+							expected = 4;
+							assert.equal(result, expected);
+						});
+					});
+			});
+		</script>
+	</body>
+</html>
