@@ -322,7 +322,25 @@
 	{
 		CKEDITOR.event.implementOn(this);
 
+		var _this = this;
 		var items = [];
+		var suppressEvents = false;
+
+		/**
+		 * Dispatches an event.
+		 *
+		 * Respects the `suppressEvents` state.
+		 *
+		 * @param {String} type
+		 * @param {Object} event
+		 */
+		var dispatchEvent = function(type, event)
+		{
+			if(!suppressEvents)
+			{
+				_this.fire(type, event);
+			}
+		};
 
 		/**
 		 * Adds a placeholder.
@@ -334,7 +352,39 @@
 		{
 			var old = this.toArray();
 			items.push(placeholder);
-			this.fire('change', {placeholders: old});
+			dispatchEvent('change', {placeholders: old});
+			return items.length;
+		};
+
+		/**
+		 * Adds multiple placeholders to the collection.
+		 *
+		 * The placeholders are added with respect to possible groups.
+		 *
+		 * @param {Placeholder[]} placeholders
+		 * @returns {number} The new length of the collection.
+		 */
+		this.addAll = function(placeholders)
+		{
+			suppressEvents = true;
+
+			var old = this.toArray();
+			for(var i = 0; i < placeholders.length; i ++)
+			{
+				var placeholder = placeholders[i];
+				if(!!placeholder.group && this.hasGroup(placeholder.group))
+				{
+					this.addToGroup(placeholder);
+				}
+				else
+				{
+					this.add(placeholder);
+				}
+			}
+
+			suppressEvents = false;
+
+			dispatchEvent('change', {placeholders: old});
 			return items.length;
 		};
 
@@ -349,7 +399,7 @@
 		{
 			var old = this.toArray();
 			items.splice(index, 0, placeholder);
-			this.fire('change', {placeholders: old});
+			dispatchEvent('change', {placeholders: old});
 			return items.length;
 		};
 
@@ -451,6 +501,24 @@
 		};
 
 		/**
+		 * Checks whether the given group exists in the collection.
+		 *
+		 * @param {String} group
+		 * @returns {boolean}
+		 */
+		this.hasGroup = function(group)
+		{
+			for(var i = 0; i < items.length; i ++)
+			{
+				if(items[i].group === group)
+				{
+					return true;
+				}
+			}
+			return false;
+		};
+
+		/**
 		 * Retrieves the index of the given placeholder.
 		 *
 		 * @param {Placeholder} placeholder
@@ -524,9 +592,22 @@
 			{
 				var old = this.toArray();
 				items.splice(index, 1);
-				this.fire('change', {placeholders: old});
+				dispatchEvent('change', {placeholders: old});
 			}
 			return items.length;
+		};
+
+		/**
+		 * Resets the collection.
+		 *
+		 * @returns {number} The new length of the collection.
+		 */
+		this.reset = function()
+		{
+			var old = this.toArray();
+			items.length = 0;
+			dispatchEvent('change', {placeholders: old});
+			return 0;
 		};
 
 		/**
