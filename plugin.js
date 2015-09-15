@@ -489,7 +489,7 @@
 			}
 
 			return items.length;
-		}
+		};
 
 		/**
 		 * Retrieves the placeholder at the given index.
