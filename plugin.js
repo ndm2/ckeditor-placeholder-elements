@@ -344,7 +344,7 @@
 
 		var _this = this;
 		var items = [];
-		var suppressEvents = false;
+		var suppressingEvents = 0;
 
 		/**
 		 * Dispatches an event.
@@ -356,7 +356,7 @@
 		 */
 		var dispatchEvent = function(type, event)
 		{
-			if(!suppressEvents)
+			if(suppressingEvents === 0)
 			{
 				_this.fire(type, event);
 			}
@@ -386,7 +386,7 @@
 		 */
 		this.addAll = function(placeholders)
 		{
-			suppressEvents = true;
+			suppressingEvents++;
 			var old = this.toArray();
 
 			for(var i = 0; i < placeholders.length; i ++)
@@ -402,7 +402,7 @@
 				}
 			}
 
-			suppressEvents = false;
+			suppressingEvents--;
 
 			dispatchEvent('change', {placeholders: old});
 			return items.length;
@@ -459,6 +459,37 @@
 			}
 			return items.length;
 		};
+
+		/**
+		 * Suppresses change events until after delegateFunction has been executed.
+		 * 
+		 * Performing multiple successive updates to a PlaceholdersCollection object
+		 * can cause UI "flickering" as multiple change events occur. In some cases
+		 * it may be useful to suppress changes until after these operations have 
+		 * been executed.
+		 * 
+		 * @param {Function} delegateFunction The function that will be performing
+		 * multiple calls to this PlaceholdersCollection object. @this will be set
+		 * to the instance of PlaceholdersCollection.
+		 * @returns {number} The new length of the collection.
+		 */
+		this.batchChanges = function(delegateFunction)
+		{
+			suppressingEvents++;
+			var old = this.toArray();
+
+			try
+			{
+				delegateFunction.call(this);
+			}
+			finally
+			{
+				suppressingEvents--;
+				dispatchEvent('change', { placeholders: old });
+			}
+
+			return items.length;
+		}
 
 		/**
 		 * Retrieves the placeholder at the given index.
