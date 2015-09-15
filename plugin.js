@@ -21,6 +21,8 @@
 	var uiElement;
 	var menuButtonStates = {};
 	var menuButtonGroup = 'placeholderElementsButton';
+	var contentIsUpdating = false;
+	var contentNeedsUpdating = false;
 
 	/**
 	 * Quotes a string for use in a regular expression.
@@ -240,7 +242,25 @@
 	 */
 	function updateContent()
 	{
-		editor.setData(editor.getData());
+		if (contentIsUpdating)
+		{
+			contentNeedsUpdating = true;
+			return;
+		}
+
+		contentIsUpdating = true;
+
+		editor.setData(editor.getData(), {
+			callback: function()
+			{
+				contentIsUpdating = false;
+				if(contentNeedsUpdating)
+				{
+					contentNeedsUpdating = false;
+					updateContent();
+				}
+			}
+		});
 	}
 
 	/**
@@ -367,8 +387,8 @@
 		this.addAll = function(placeholders)
 		{
 			suppressEvents = true;
-
 			var old = this.toArray();
+
 			for(var i = 0; i < placeholders.length; i ++)
 			{
 				var placeholder = placeholders[i];
