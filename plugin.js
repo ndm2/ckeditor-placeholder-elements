@@ -762,7 +762,7 @@
 								for(var i = 0; i < elements.length; i ++)
 								{
 									var element = elements[i];
-									var text = element.$.textContent.toString();
+									var text = (element.$.innerText || element.$.textContent).toString();
 									if(text !== currentValue && text.match(placeholdersRegexExact))
 									{
 										this.setValue(text, placeholdersMap[text].label);
