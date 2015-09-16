@@ -12,18 +12,6 @@
 
 	'use strict';
 
-	var config;
-	var editor;
-	var placeholdersCollection;
-	var placeholdersRegexLoose;
-	var placeholdersRegexExact;
-	var placeholdersMap = {};
-	var uiElement;
-	var menuButtonStates = {};
-	var menuButtonGroup = 'placeholderElementsButton';
-	var contentIsUpdating = false;
-	var contentNeedsUpdating = false;
-
 	/**
 	 * Quotes a string for use in a regular expression.
 	 *
@@ -87,180 +75,6 @@
 				callback(placeholder);
 			}
 		}
-	}
-
-	/**
-	 * Updates the placeholders regexp objects based on the currently
-	 * configured placeholders.
-	 *
-	 * It generates two objects, one for a loose match, and one for an
-	 * exact match.
-	 */
-	function updatePlaceholdersRegex()
-	{
-		var matches = [];
-		processPlaceholders(placeholdersCollection.toArray(), function(placeholder)
-		{
-			matches.push(regexQuote(placeholder.value));
-		});
-		var startDelimiter = regexQuote(config.startDelimiter);
-		var endDelimiter = regexQuote(config.endDelimiter);
-		var pattern = '(' + startDelimiter + '(' + matches.join('|') + ')' + endDelimiter + ')';
-
-		placeholdersRegexLoose = new RegExp(pattern, 'g');
-		placeholdersRegexExact = new RegExp('^' + pattern + '$', 'g');
-	}
-
-	/**
-	 * Updates the placeholders map based on the currently configured
-	 * placeholders.
-	 *
-	 * The map is used for fast retrieval of a placeholder based on its
-	 * formatted placeholder value (ie the value surrounded by possible
-	 * delimiters).
-	 */
-	function updatePlaceholdersMap()
-	{
-		placeholdersMap = {};
-		processPlaceholders(placeholdersCollection.toArray(), function(placeholder)
-		{
-			placeholdersMap[config.startDelimiter + placeholder.value + config.endDelimiter] = placeholder;
-		});
-	}
-
-	/**
-	 * Updates the user interface based on the currently configured
-	 * placeholders.
-	 *
-	 * @param {Placeholder[]} oldPlaceholders
-	 */
-	function updateUI(oldPlaceholders)
-	{
-		if(!uiElement)
-		{
-			return;
-		}
-		switch(config.uiType)
-		{
-			case 'button':
-				if(!!uiElement._.menu)
-				{
-					// Remove all menu items, this has to be done via the "hidden"
-					// menu object, as there is no public API for this available
-					// on the menu button element itself.
-					uiElement._.menu.removeAll();
-				}
-
-				processPlaceholders(oldPlaceholders, function(placeholder)
-				{
-					editor.removeMenuItem(placeholder.value);
-				});
-
-				populateMenuButton();
-				break;
-
-			case 'combo':
-				if(!!uiElement._.list)
-				{
-					// Clear the listbox... again there is no public API for this
-					// task, we need to hack our way through all this "hidden" stuff
-					// and empty it ourself.
-					uiElement._.list._.pendingList = [];
-					uiElement._.list._.pendingList = [];
-					uiElement._.list._.items = [];
-					uiElement._.list._.groups = [];
-					uiElement._.list.element.setHtml('');
-
-					popuplateRichCombo();
-
-					// Commit the changes... you guessed it, the API doesn't really
-					// support this, we need to hack into the "hidden" internals and
-					// reset the committed state.
-					uiElement._.committed = false;
-					uiElement.commit();
-				}
-				break;
-		}
-	}
-
-	/**
-	 * Populates the RichCombo UI element based on the currently
-	 * configured placeholders.
-	 */
-	function popuplateRichCombo()
-	{
-		var placeholders = placeholdersCollection.toArray();
-		if(!hasGroups(placeholders))
-		{
-			var lang = editor.lang.placeholder_elements;
-			uiElement.startGroup(lang.label);
-		}
-
-		processPlaceholders(placeholders, function(placeholder, group)
-		{
-			if(!!group)
-			{
-				uiElement.startGroup(group);
-			}
-
-			uiElement.add(
-				config.startDelimiter + placeholder.value + config.endDelimiter,
-				placeholder.label,
-				placeholder.label
-			);
-		});
-	}
-
-	/**
-	 * Populates the MenuButton UI element based on the currently
-	 * configured placeholders.
-	 */
-	function populateMenuButton()
-	{
-		var uiMenuItems = {};
-		menuButtonStates = {};
-
-		processPlaceholders(placeholdersCollection.toArray(), function(placeholder)
-		{
-			uiMenuItems[placeholder.value] = {
-				label: placeholder.label,
-				value: config.startDelimiter + placeholder.value + config.endDelimiter,
-				group: menuButtonGroup,
-				onClick: function()
-				{
-					editor.insertText(this.value);
-				}
-			};
-			menuButtonStates[placeholder.value] = CKEDITOR.TRISTATE_OFF;
-		});
-		editor.addMenuItems(uiMenuItems);
-	}
-
-	/**
-	 * Updates the editor content so that the registered data processor
-	 * filters are being invoked.
-	 */
-	function updateContent()
-	{
-		if(contentIsUpdating)
-		{
-			contentNeedsUpdating = true;
-			return;
-		}
-
-		contentIsUpdating = true;
-
-		editor.setData(editor.getData(), {
-			callback: function()
-			{
-				contentIsUpdating = false;
-				if(contentNeedsUpdating)
-				{
-					contentNeedsUpdating = false;
-					updateContent();
-				}
-			}
-		});
 	}
 
 	/**
@@ -682,7 +496,386 @@
 		};
 	}
 
-	placeholdersCollection = new PlaceholdersCollection();
+	/**
+	 * @class
+	 * @constructor
+	 * @param {CKEDITOR.editor} editor
+	 */
+	function PlaceholderElementsPlugin(editor)
+	{
+		var config = editor.config.placeholder_elements;
+		var placeholdersCollection = new PlaceholdersCollection();
+		var placeholdersRegexLoose;
+		var placeholdersRegexExact;
+		var placeholdersMap = {};
+		var uiElement;
+		var menuButtonStates = {};
+		var menuButtonGroup = 'placeholderElementsButton';
+		var contentIsUpdating = false;
+		var contentNeedsUpdating = false;
+		var changeSubscription;
+
+		/**
+		 * @type {PlaceholdersCollection}
+		 */
+		this.placeholders = placeholdersCollection;
+
+		/**
+		 * Processes text and replaces tokens with the appropriate html elements.
+		 *
+		 * @param {string} text
+		 * @returns {string}
+		 */
+		this.dataFilterTextRule = function(text)
+		{
+			return text.replace(placeholdersRegexLoose, function(match)
+			{
+				var element = new CKEDITOR.htmlParser.element('span', {
+					'class': 'cke_placeholder_element'
+				});
+				element.add(new CKEDITOR.htmlParser.text(match));
+
+				return editor.widgets.wrapElement(element, 'placeholder_elements').getOuterHtml();
+			});
+		};
+
+		/**
+		 * Cleans up all listeners related to this instance of the plugin.
+		 */
+		this.destroy = function()
+		{
+			if(changeSubscription !== undefined)
+			{
+				changeSubscription.removeListener();
+			}
+		};
+
+		/**
+		 * Updates the placeholders regexp objects based on the currently
+		 * configured placeholders.
+		 *
+		 * It generates two objects, one for a loose match, and one for an
+		 * exact match.
+		 */
+		function updatePlaceholdersRegex()
+		{
+			var matches = [];
+			processPlaceholders(placeholdersCollection.toArray(), function(placeholder)
+			{
+				matches.push(regexQuote(placeholder.value));
+			});
+			var startDelimiter = regexQuote(config.startDelimiter);
+			var endDelimiter = regexQuote(config.endDelimiter);
+			var pattern = '(' + startDelimiter + '(' + matches.join('|') + ')' + endDelimiter + ')';
+
+			placeholdersRegexLoose = new RegExp(pattern, 'g');
+			placeholdersRegexExact = new RegExp('^' + pattern + '$', 'g');
+		}
+
+		/**
+		 * Updates the placeholders map based on the currently configured
+		 * placeholders.
+		 *
+		 * The map is used for fast retrieval of a placeholder based on its
+		 * formatted placeholder value (ie the value surrounded by possible
+		 * delimiters).
+		 */
+		function updatePlaceholdersMap()
+		{
+			placeholdersMap = {};
+			processPlaceholders(placeholdersCollection.toArray(), function(placeholder)
+			{
+				placeholdersMap[config.startDelimiter + placeholder.value + config.endDelimiter] = placeholder;
+			});
+		}
+
+		/**
+		 * Updates the user interface based on the currently configured
+		 * placeholders.
+		 *
+		 * @param {Placeholder[]} oldPlaceholders
+		 */
+		function updateUI(oldPlaceholders)
+		{
+			if(!uiElement)
+			{
+				return;
+			}
+			switch(config.uiType)
+			{
+				case 'button':
+					if(!!uiElement._.menu)
+					{
+						// Remove all menu items, this has to be done via the "hidden"
+						// menu object, as there is no public API for this available
+						// on the menu button element itself.
+						uiElement._.menu.removeAll();
+					}
+
+					processPlaceholders(oldPlaceholders, function(placeholder)
+					{
+						editor.removeMenuItem(placeholder.value);
+					});
+
+					populateMenuButton(editor);
+					break;
+
+				case 'combo':
+					if(!!uiElement._.list)
+					{
+						// Clear the listbox... again there is no public API for this
+						// task, we need to hack our way through all this "hidden" stuff
+						// and empty it ourself.
+						uiElement._.list._.pendingList = [];
+						uiElement._.list._.pendingList = [];
+						uiElement._.list._.items = [];
+						uiElement._.list._.groups = [];
+						uiElement._.list.element.setHtml('');
+
+						popuplateRichCombo();
+
+						// Commit the changes... you guessed it, the API doesn't really
+						// support this, we need to hack into the "hidden" internals and
+						// reset the committed state.
+						uiElement._.committed = false;
+						uiElement.commit();
+					}
+					break;
+			}
+		}
+
+		/**
+		 * Populates the RichCombo UI element based on the currently
+		 * configured placeholders.
+		 */
+		function popuplateRichCombo()
+		{
+			var placeholders = placeholdersCollection.toArray();
+			if(!hasGroups(placeholders))
+			{
+				var lang = editor.lang.placeholder_elements;
+				uiElement.startGroup(lang.label);
+			}
+
+			processPlaceholders(placeholders, function(placeholder, group)
+			{
+				if(!!group)
+				{
+					uiElement.startGroup(group);
+				}
+
+				uiElement.add(
+					config.startDelimiter + placeholder.value + config.endDelimiter,
+					placeholder.label,
+					placeholder.label
+				);
+			});
+		}
+
+		/**
+		 * Populates the MenuButton UI element based on the currently
+		 * configured placeholders.
+		 */
+		function populateMenuButton()
+		{
+			var uiMenuItems = {};
+			menuButtonStates = {};
+
+			processPlaceholders(placeholdersCollection.toArray(), function(placeholder)
+			{
+				uiMenuItems[placeholder.value] = {
+					label: placeholder.label,
+					value: config.startDelimiter + placeholder.value + config.endDelimiter,
+					group: menuButtonGroup,
+					onClick: function()
+					{
+						editor.insertText(this.value);
+					}
+				};
+				menuButtonStates[placeholder.value] = CKEDITOR.TRISTATE_OFF;
+			});
+			editor.addMenuItems(uiMenuItems);
+		}
+
+		/**
+		 * Updates the editor content so that the registered data processor
+		 * filters are being invoked.
+		 */
+		function updateContent()
+		{
+			if (contentIsUpdating)
+			{
+				contentNeedsUpdating = true;
+				return;
+			}
+
+			contentIsUpdating = true;
+
+			editor.setData(editor.getData(), {
+				callback: function()
+				{
+					contentIsUpdating = false;
+					if(contentNeedsUpdating)
+					{
+						contentNeedsUpdating = false;
+						updateContent(editor);
+					}
+				}
+			});
+		}
+
+		var currentGroup = null;
+		for(var i = 0; i < config.placeholders.length; i ++)
+		{
+			var placeholder = config.placeholders[i];
+			if(!!placeholder.group && !!placeholder.placeholders)
+			{
+				if(placeholder.group !== currentGroup)
+				{
+					currentGroup = placeholder.group;
+				}
+
+				for(var j = 0; j < placeholder.placeholders.length; j ++)
+				{
+					var groupedPlaceholder = placeholder.placeholders[j];
+					placeholdersCollection.add({
+						label: groupedPlaceholder.label,
+						value: groupedPlaceholder.value,
+						group: currentGroup
+					});
+				}
+			}
+			else
+			{
+				placeholdersCollection.add({
+					label: placeholder.label,
+					value: placeholder.value
+				});
+			}
+		}
+
+		updatePlaceholdersRegex();
+		updatePlaceholdersMap();
+
+		changeSubscription = placeholdersCollection.on('change', function(event)
+		{
+			updatePlaceholdersRegex();
+			updatePlaceholdersMap();
+			updateUI(event.data.placeholders);
+			updateContent();
+		});
+
+		var lang = editor.lang.placeholder_elements;
+		switch(config.uiType)
+		{
+			case 'button':
+				editor.addMenuGroup(menuButtonGroup);
+
+				editor.ui.add('PlaceholderElements', CKEDITOR.UI_MENUBUTTON, {
+					label: lang.label,
+					title: lang.title,
+					toolbar: 'insert',
+
+					onRender: function()
+					{
+						uiElement = this;
+					},
+
+					onMenu: function()
+					{
+						return menuButtonStates;
+					}
+				});
+
+				populateMenuButton();
+				break;
+
+			case 'combo':
+				editor.ui.add('PlaceholderElements', CKEDITOR.UI_RICHCOMBO, {
+					label: lang.label,
+					title: lang.title,
+					toolbar: 'insert',
+
+					panel: {
+						css: [CKEDITOR.skin.getPath('editor')].concat(editor.config.contentsCss),
+						multiSelect: false,
+						attributes: {
+							'aria-label': lang.title
+						}
+					},
+
+					init: function()
+					{
+						uiElement = this;
+						popuplateRichCombo();
+					},
+
+					onClick: function(value)
+					{
+						editor.insertText(value);
+					},
+
+					onRender: function()
+					{
+						editor.on('selectionChange', function (ev)
+						{
+							var currentValue = this.getValue();
+
+							var elements = ev.data.path.elements;
+							for(var i = 0; i < elements.length; i ++)
+							{
+								var element = elements[i];
+								var text = (element.$.innerText || element.$.textContent).toString();
+								if(text !== currentValue && text.match(placeholdersRegexExact))
+								{
+									this.setValue(text, placeholdersMap[text].label);
+									return;
+								}
+							}
+
+							this.setValue('');
+						}, this);
+					}
+				});
+				break;
+		}
+
+		editor.widgets.add('placeholder_elements', {
+			draggable: config.draggable,
+			pathName: lang.pathName,
+
+			init: function()
+			{
+				this.setData('name', this.element.getText());
+			},
+
+			data: function()
+			{
+				this.element.setText(this.data.name);
+			},
+
+			downcast: function()
+			{
+				return new CKEDITOR.htmlParser.text(this.data.name);
+			}
+		});
+	}
+
+	var instances = {};
+
+	CKEDITOR.on('instanceDestroyed', function(ev)
+	{
+		var instance = instances[ev.editor.id];
+
+		if(instance === undefined)
+		{
+			return;
+		}
+
+		instance.destroy();
+
+		delete instances[ev.editor.id];
+	});
 
 	CKEDITOR.plugins.add('placeholder_elements', {
 		hidpi: true,
@@ -690,12 +883,10 @@
 		lang: ['en', 'de'],
 		requires: ['richcombo', 'widget'],
 
-		placeholders: placeholdersCollection,
+		instances: instances,
 
-		init: function(ed)
+		init: function(editor)
 		{
-			editor = ed;
-
 			var defaults = {
 				css:
 					'.cke_placeholder_element { background: #ffff00; } ' +
@@ -706,165 +897,19 @@
 				endDelimiter: '}',
 				uiType: 'button'
 			};
-			config =
+			var config =
 				editor.config.placeholder_elements =
 					CKEDITOR.tools.extend(editor.config.placeholder_elements || {}, defaults);
 
+			instances[editor.id] = new PlaceholderElementsPlugin(editor);
+
 			CKEDITOR.addCss(config.css);
-
-			var currentGroup = null;
-			for(var i = 0; i < config.placeholders.length; i ++)
-			{
-				var placeholder = config.placeholders[i];
-				if(!!placeholder.group && !!placeholder.placeholders)
-				{
-					if(placeholder.group !== currentGroup)
-					{
-						currentGroup = placeholder.group;
-					}
-
-					for(var j = 0; j < placeholder.placeholders.length; j ++)
-					{
-						var groupedPlaceholder = placeholder.placeholders[j];
-						placeholdersCollection.add({
-							label: groupedPlaceholder.label,
-							value: groupedPlaceholder.value,
-							group: currentGroup
-						});
-					}
-				}
-				else
-				{
-					placeholdersCollection.add({
-						label: placeholder.label,
-						value: placeholder.value
-					});
-				}
-			}
-
-			updatePlaceholdersRegex();
-			updatePlaceholdersMap();
-
-			placeholdersCollection.on('change', function(event)
-			{
-				updatePlaceholdersRegex();
-				updatePlaceholdersMap();
-				updateUI(event.data.placeholders);
-				updateContent();
-			});
-
-			var lang = editor.lang.placeholder_elements;
-			switch(config.uiType)
-			{
-				case 'button':
-					editor.addMenuGroup(menuButtonGroup);
-
-					editor.ui.add('PlaceholderElements', CKEDITOR.UI_MENUBUTTON, {
-						label: lang.label,
-						title: lang.title,
-						toolbar: 'insert',
-
-						onRender: function()
-						{
-							uiElement = this;
-						},
-
-						onMenu: function()
-						{
-							return menuButtonStates;
-						}
-					});
-
-					populateMenuButton();
-					break;
-
-				case 'combo':
-					editor.ui.add('PlaceholderElements', CKEDITOR.UI_RICHCOMBO, {
-						label: lang.label,
-						title: lang.title,
-						toolbar: 'insert',
-
-						panel: {
-							css: [CKEDITOR.skin.getPath('editor')].concat(editor.config.contentsCss),
-							multiSelect: false,
-							attributes: {
-								'aria-label': lang.title
-							}
-						},
-
-						init: function()
-						{
-							uiElement = this;
-							popuplateRichCombo();
-						},
-
-						onClick: function(value)
-						{
-							editor.insertText(value);
-						},
-
-						onRender: function()
-						{
-							editor.on('selectionChange', function(ev)
-							{
-								var currentValue = this.getValue();
-
-								var elements = ev.data.path.elements;
-								for(var i = 0; i < elements.length; i ++)
-								{
-									var element = elements[i];
-									var text = (element.$.innerText || element.$.textContent).toString();
-									if(text !== currentValue && text.match(placeholdersRegexExact))
-									{
-										this.setValue(text, placeholdersMap[text].label);
-										return;
-									}
-								}
-
-								this.setValue('');
-							},
-							this);
-						}
-					});
-					break;
-			}
-
-			editor.widgets.add('placeholder_elements', {
-				draggable: config.draggable,
-				pathName: lang.pathName,
-
-				init: function()
-				{
-					this.setData('name', this.element.getText());
-				},
-
-				data: function()
-				{
-					this.element.setText(this.data.name);
-				},
-
-				downcast: function()
-				{
-					return new CKEDITOR.htmlParser.text(this.data.name);
-				}
-			});
 		},
 
 		afterInit: function(editor)
 		{
 			editor.dataProcessor.dataFilter.addRules({
-				text: function(text)
-				{
-					return text.replace(placeholdersRegexLoose, function(match)
-					{
-						var element = new CKEDITOR.htmlParser.element('span', {
-							'class': 'cke_placeholder_element'
-						});
-						element.add(new CKEDITOR.htmlParser.text(match));
-
-						return editor.widgets.wrapElement(element, 'placeholder_elements').getOuterHtml();
-					});
-				}
+				text: instances[editor.id].dataFilterTextRule
 			});
 		}
 	});
