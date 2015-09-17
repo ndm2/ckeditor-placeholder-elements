@@ -21,6 +21,8 @@
 	var uiElement;
 	var menuButtonStates = {};
 	var menuButtonGroup = 'placeholderElementsButton';
+	var contentIsUpdating = false;
+	var contentNeedsUpdating = false;
 
 	/**
 	 * Quotes a string for use in a regular expression.
@@ -240,7 +242,25 @@
 	 */
 	function updateContent()
 	{
-		editor.setData(editor.getData());
+		if(contentIsUpdating)
+		{
+			contentNeedsUpdating = true;
+			return;
+		}
+
+		contentIsUpdating = true;
+
+		editor.setData(editor.getData(), {
+			callback: function()
+			{
+				contentIsUpdating = false;
+				if(contentNeedsUpdating)
+				{
+					contentNeedsUpdating = false;
+					updateContent();
+				}
+			}
+		});
 	}
 
 	/**
@@ -324,7 +344,7 @@
 
 		var _this = this;
 		var items = [];
-		var suppressEvents = false;
+		var suppressingEvents = 0;
 
 		/**
 		 * Dispatches an event.
@@ -336,7 +356,7 @@
 		 */
 		var dispatchEvent = function(type, event)
 		{
-			if(!suppressEvents)
+			if(suppressingEvents === 0)
 			{
 				_this.fire(type, event);
 			}
@@ -366,9 +386,9 @@
 		 */
 		this.addAll = function(placeholders)
 		{
-			suppressEvents = true;
-
+			suppressingEvents ++;
 			var old = this.toArray();
+
 			for(var i = 0; i < placeholders.length; i ++)
 			{
 				var placeholder = placeholders[i];
@@ -382,7 +402,7 @@
 				}
 			}
 
-			suppressEvents = false;
+			suppressingEvents --;
 
 			dispatchEvent('change', {placeholders: old});
 			return items.length;
@@ -437,6 +457,37 @@
 			{
 				this.addAt(Math.min(range.begin + index, range.end + 1), placeholder);
 			}
+			return items.length;
+		};
+
+		/**
+		 * @callback batchProcessCallback
+		 * @this PlaceholdersCollection
+		 */
+
+		/**
+		 * Suppresses change events until after `callback` has been executed.
+		 * 
+		 * @param {batchProcessCallback} callback The function that will be performing
+		 * multiple calls to this `PlaceholdersCollection` object. `this` will be set
+		 * to the instance of `PlaceholdersCollection`.
+		 * @returns {number} The new length of the collection.
+		 */
+		this.batchChanges = function(callback)
+		{
+			suppressingEvents ++;
+			var old = this.toArray();
+
+			try
+			{
+				callback.call(this);
+			}
+			finally
+			{
+				suppressingEvents --;
+				dispatchEvent('change', {placeholders: old});
+			}
+
 			return items.length;
 		};
 
