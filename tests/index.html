@@ -411,6 +411,68 @@
 							assert.equal(result, expected);
 						});
 
+						QUnit.test('replace() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ'};
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							var result = collection.replace(fooPlaceholder, bazPlaceholder);
+							expected = fooPlaceholder;
+							assert.equal(result, expected);
+
+							expected = [
+								bazPlaceholder,
+								barPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+						});
+
+						QUnit.test('replaceAt() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP'};
+
+							collection.add(fooPlaceholder);
+							collection.add(barPlaceholder);
+							collection.add(bazPlaceholder);
+
+							var expected = [
+								fooPlaceholder,
+								barPlaceholder,
+								bazPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+
+							var result = collection.replaceAt(1, zapPlaceholder);
+							expected = barPlaceholder;
+							assert.equal(result, expected);
+
+							expected = [
+								fooPlaceholder,
+								zapPlaceholder,
+								bazPlaceholder
+							];
+							assert.deepEqual(collection.toArray(), expected);
+						});
+
 						QUnit.test('remove() test', function(assert)
 						{
 							/** @type {PlaceholdersCollection} */

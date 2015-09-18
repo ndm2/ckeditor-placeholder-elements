@@ -463,6 +463,37 @@
 		};
 
 		/**
+		 * Replaces the given placeholder with another one.
+		 *
+		 * @param {Placeholder} oldPlaceholder
+		 * @param {Placeholder} newPlaceholder
+		 * @returns {Placeholder} The placeholder that was replaced.
+		 */
+		this.replace = function(oldPlaceholder, newPlaceholder)
+		{
+			return this.replaceAt(this.indexOf(oldPlaceholder), newPlaceholder);
+		};
+
+		/**
+		 * Replaces the placeholder at the given index.
+		 *
+		 * @param {number} index
+		 * @param {Placeholder} placeholder
+		 * @returns {Placeholder} The placeholder that was replaced.
+		 */
+		this.replaceAt = function(index, placeholder)
+		{
+			if(index in items)
+			{
+				var old = items[index];
+				items[index] = placeholder;
+				dispatchEvent('change', {placeholders: [old]});
+				return old;
+			}
+			return null;
+		};
+
+		/**
 		 * Resets the collection.
 		 *
 		 * @returns {number} The new length of the collection.
