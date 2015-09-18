@@ -81,7 +81,7 @@
 	 * @typedef {Object} Placeholder
 	 * @property {String} label
 	 * @property {String} value
-	 * @property {String} group
+	 * @property {String} [group]
 	 */
 
 	/**
