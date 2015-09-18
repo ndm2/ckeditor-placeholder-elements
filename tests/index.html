@@ -211,6 +211,35 @@
 							assert.deepEqual(collection.toArray(), expected);
 						});
 
+						QUnit.test('batchChanges() test', function(assert)
+						{
+							/** @type {PlaceholdersCollection} */
+							var collection = new PlaceholdersCollectionClass();
+
+							var fooPlaceholder = {label: 'foo', 'value': 'FOO'};
+							var barPlaceholder = {label: 'bar', 'value': 'BAR'};
+							var bazPlaceholder = {label: 'baz', 'value': 'BAZ'};
+							var zapPlaceholder = {label: 'zap', 'value': 'ZAP'};
+
+							var changeEvents = 0;
+
+							collection.on('change', function(evt)
+							{
+								changeEvents ++;
+							});
+
+							collection.batchChanges(function()
+							{
+								this.add(fooPlaceholder);
+								this.reset();
+								this.addAll([barPlaceholder, bazPlaceholder, zapPlaceholder]);
+								this.remove(bazPlaceholder);
+							});
+
+							assert.equal(changeEvents, 1);
+							assert.equal(collection.length(), 2);
+						});
+
 						QUnit.test('getAt() test', function(assert)
 						{
 							/** @type {PlaceholdersCollection} */
