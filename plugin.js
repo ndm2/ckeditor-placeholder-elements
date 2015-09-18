@@ -928,13 +928,15 @@
 				endDelimiter: '}',
 				uiType: 'button'
 			};
-			var config =
-				editor.config.placeholder_elements =
-					CKEDITOR.tools.extend(editor.config.placeholder_elements || {}, defaults);
+			editor.config.placeholder_elements =
+				CKEDITOR.tools.extend(editor.config.placeholder_elements || {}, defaults);
+
+			editor.on('contentDom', function(ev)
+			{
+				ev.editor.document.appendStyleText(ev.editor.config.placeholder_elements.css);
+			});
 
 			instances[editor.id] = new PlaceholderElementsPlugin(editor);
-
-			CKEDITOR.addCss(config.css);
 		},
 
 		afterInit: function(editor)
