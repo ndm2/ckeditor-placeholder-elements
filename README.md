@@ -116,6 +116,64 @@ config.placeholder_elements = {
 ```
 
 
+### Modifying the list of placeholders at runtime
+
+The available placeholders can be modified at runtime using the instance of the `PlaceholdersCollection` class
+associated with the corresponding plugin instance.
+
+Changes made to this collection are automatically being applied to the editor UI and content.
+
+```js
+var editorIdentifier = 'editor1'; // in most cases this is the ID or
+                                  // name of the DOM element replaced
+                                  // by the editor
+var editor = CKEDITOR.instances[editorIdentifier];
+var plugin = editor.plugins.placeholder_elements.instances[editor.id];
+
+/** @type {PlaceholdersCollection} */
+var placeholders = plugin.placeholders;
+```
+
+Add a new placeholder
+```js
+var placeholder = {label: 'Foo', value: 'FOO'};
+placeholders.add(placeholder);
+```
+
+Add a new placeholder to an existing group (or append a new group in case it doesn't exist yet)
+```js
+var placeholder = {label: 'Foo', value: 'FOO', group: 'Bar'};
+placeholders.addToGroup(placeholder);
+```
+
+Remove the third placeholder
+```js
+placeholders.removeAt(2);
+```
+
+Modify an existing placeholder
+```js
+var placeholder = placeholders.getAt(2);
+placeholder.label = 'New Label';
+placeholders.replaceAt(2, placeholder);
+```
+
+For more check out the [`PlaceholdersCollection` class](https://github.com/ndm2/ckeditor-placeholder-elements/blob/master/plugin.js)
+source.
+
+**Note** that applying multiple consecutive changes can lead to flickering, due to the nature of `change` events causing
+UI and content updates. Make use of the `PlaceholdersCollection.batchChanges()` method to avoid this, changes made from
+the callback passed to this method will cause only a single `change` event to be fired afterwards.
+
+```js
+placeholders.batchChanges(function()
+{
+	this.replaceAt(2, {label: 'Foo', value: 'FOO'});
+	this.add({label: 'Bar', value: 'BAR'});
+});
+```
+
+
 ## Issues
 
 Please use the [issue tracker](https://github.com/ndm2/ckeditor-placeholder-elements/issues) to report problems.
