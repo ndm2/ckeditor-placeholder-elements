@@ -53,7 +53,9 @@ The following options are available for configuration:
 ```js
 config.placeholder_elements = {
 	// The CSS applied to the placeholder elements.
-	css: '.cke_placeholder_element { background: #ffff00; } a .cke_placeholder_element { text-decoration: underline }',
+	css:
+		'.cke_placeholder_element { background: #ffff00; }' +
+		'a .cke_placeholder_element { text-decoration: underline }',
 
 	// Defines whether the placeholders should be draggable.
 	draggable: false,
