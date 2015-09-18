@@ -27,8 +27,9 @@
 						assert.ok(true, 'editor instance ready');
 						done();
 
-						var plugin = CKEDITOR.instances.textarea1.plugins.placeholder_elements;
-						var PlaceholdersCollectionClass = plugin.placeholders.__proto__.constructor;
+						var editor = CKEDITOR.instances.textarea1;
+						var plugin = editor.plugins.placeholder_elements;
+						var PlaceholdersCollectionClass = plugin.instances[editor.id].placeholders.__proto__.constructor;
 
 						QUnit.test('add() test', function(assert)
 						{
