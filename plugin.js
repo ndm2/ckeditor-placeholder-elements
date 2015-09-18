@@ -734,7 +734,7 @@
 		 */
 		function updateContent()
 		{
-			if (contentIsUpdating)
+			if(contentIsUpdating)
 			{
 				contentNeedsUpdating = true;
 				return;
