@@ -26,10 +26,21 @@ This plugins requires CKEditor 4.3+ and the following plugins:
 
 You can either
 
-* clone or download and unpack the repository into `ckeditor/plugins/placeholder_elements/`
 * use [Bower](http://bower.io)
-* or [Composer](https://getcomposer.org) (optionally in combination with
-[mnsami/composer-installer-plugin](https://github.com/mnsami/composer-installer-plugin))
+  ```bash
+  $ bower install ndm2-ckeditor-placeholder-elements
+  ```
+
+* clone or download and unpack the repository into `ckeditor/plugins/placeholder_elements/`
+  ```bash
+  $ git clone --depth=1 https://github.com/ndm2/ckeditor-placeholder-elements ./ckeditor/plugins/placeholder_elements/
+  ```
+
+* or use [Composer](https://getcomposer.org) (optionally in combination with a custom directory installer like for
+example [mnsami/composer-installer-plugin](https://github.com/mnsami/composer-installer-plugin))
+  ```bash
+  $ composer require ndm2/ckeditor-placeholder-elements
+  ```
 
 If you can't install the plugin directly in the CKEditor plugin folder, use
 [`CKEDITOR.plugins.addExternal()`](http://docs.ckeditor.com/#!/api/CKEDITOR.resourceManager-method-addExternal) to
