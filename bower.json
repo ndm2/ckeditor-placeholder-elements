@@ -1,16 +1,20 @@
 {
 	"name": "ndm2-ckeditor-placeholder-elements",
 	"description": "A CKEditor plugin that adds support for predefined placeholder elements.",
-	"main": [
-		"icons/hidpi/placeholderelements.png",
-		"icons/placeholderelements.png",
-		"lang/de.js",
-		"lang/en.js",
-		"plugin.js"
-	],
 	"license": "MIT",
+	"main": "plugin.js",
 	"ignore": [
-		"composer.json"
+		"**/.*",
+		"bower_components",
+		"node_modules",
+		"tests",
+		".gitignore",
+		".jshintrc",
+		".travis.yml",
+		"composer.json",
+		"Gruntfile.js",
+		"package.json",
+		"package-lock.json"
 	],
 	"keywords": [
 		"ckeditor", "placeholder", "plugin"
