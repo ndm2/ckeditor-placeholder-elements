@@ -281,7 +281,7 @@
 
 		/**
 		 * Suppresses change events until after `callback` has been executed.
-		 * 
+		 *
 		 * @param {batchProcessCallback} callback The function that will be performing
 		 * multiple calls to this `PlaceholdersCollection` object. `this` will be set
 		 * to the instance of `PlaceholdersCollection`.
@@ -582,6 +582,59 @@
 		};
 
 		/**
+		 * Populates the RichCombo UI element based on the currently
+		 * configured placeholders.
+		 */
+		function popuplateRichCombo()
+		{
+			var placeholders = placeholdersCollection.toArray();
+			if(!hasGroups(placeholders))
+			{
+				var lang = editor.lang.placeholder_elements;
+				uiElement.startGroup(lang.label);
+			}
+
+			processPlaceholders(placeholders, function(placeholder, group)
+			{
+				if(!!group)
+				{
+					uiElement.startGroup(group);
+				}
+
+				uiElement.add(
+					config.startDelimiter + placeholder.value + config.endDelimiter,
+					placeholder.label,
+					placeholder.label
+				);
+			});
+		}
+
+		/**
+		 * Populates the MenuButton UI element based on the currently
+		 * configured placeholders.
+		 */
+		function populateMenuButton()
+		{
+			var uiMenuItems = {};
+			menuButtonStates = {};
+
+			processPlaceholders(placeholdersCollection.toArray(), function(placeholder)
+			{
+				uiMenuItems[placeholder.value] = {
+					label: placeholder.label,
+					value: config.startDelimiter + placeholder.value + config.endDelimiter,
+					group: menuButtonGroup,
+					onClick: function()
+					{
+						editor.insertText(this.value);
+					}
+				};
+				menuButtonStates[placeholder.value] = CKEDITOR.TRISTATE_OFF;
+			});
+			editor.addMenuItems(uiMenuItems);
+		}
+
+		/**
 		 * Updates the placeholders regexp objects based on the currently
 		 * configured placeholders.
 		 *
@@ -673,59 +726,6 @@
 					}
 					break;
 			}
-		}
-
-		/**
-		 * Populates the RichCombo UI element based on the currently
-		 * configured placeholders.
-		 */
-		function popuplateRichCombo()
-		{
-			var placeholders = placeholdersCollection.toArray();
-			if(!hasGroups(placeholders))
-			{
-				var lang = editor.lang.placeholder_elements;
-				uiElement.startGroup(lang.label);
-			}
-
-			processPlaceholders(placeholders, function(placeholder, group)
-			{
-				if(!!group)
-				{
-					uiElement.startGroup(group);
-				}
-
-				uiElement.add(
-					config.startDelimiter + placeholder.value + config.endDelimiter,
-					placeholder.label,
-					placeholder.label
-				);
-			});
-		}
-
-		/**
-		 * Populates the MenuButton UI element based on the currently
-		 * configured placeholders.
-		 */
-		function populateMenuButton()
-		{
-			var uiMenuItems = {};
-			menuButtonStates = {};
-
-			processPlaceholders(placeholdersCollection.toArray(), function(placeholder)
-			{
-				uiMenuItems[placeholder.value] = {
-					label: placeholder.label,
-					value: config.startDelimiter + placeholder.value + config.endDelimiter,
-					group: menuButtonGroup,
-					onClick: function()
-					{
-						editor.insertText(this.value);
-					}
-				};
-				menuButtonStates[placeholder.value] = CKEDITOR.TRISTATE_OFF;
-			});
-			editor.addMenuItems(uiMenuItems);
 		}
 
 		/**
