@@ -8,6 +8,7 @@
 		"bower_components",
 		"node_modules",
 		"tests",
+		".gitattributes",
 		".gitignore",
 		".jshintrc",
 		".travis.yml",
