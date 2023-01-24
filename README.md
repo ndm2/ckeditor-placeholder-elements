@@ -1,7 +1,7 @@
 # CKEditor Placeholder Elements Plugin
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.txt)
-[![Build Status](https://img.shields.io/github/workflow/status/ndm2/ckeditor-placeholder-elements/CI/master?style=flat-square)](https://github.com/ndm2/ckeditor-placeholder-elements/actions/workflows/ci.yml?query=branch%3Amaster)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/ndm2/ckeditor-placeholder-elements/ci.yml?branch=master&style=flat-square)](https://github.com/ndm2/ckeditor-placeholder-elements/actions/workflows/ci.yml?query=branch%3Amaster)
 
 This is a [CKEditor](http://ckeditor.com/) plugin that adds support for predefined placeholder elements.
 
