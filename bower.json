@@ -27,6 +27,6 @@
 		}
 	],
 	"devDependencies": {
-		"ckeditor": "4"
+		"ckeditor": "4.22.1"
 	}
 }
