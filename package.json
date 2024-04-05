@@ -1,6 +1,7 @@
 {
   "name": "@ndm2/ckeditor-placeholder-elements",
   "version": "1.0.5",
+  "description": "A CKEditor plugin that adds support for predefined placeholder elements.",
   "author": "Oliver Nowak <info@nowak-media.de>",
   "keywords": ["ckeditor", "ckeditor4", "ckeditor 4", "placeholders"],
   "license": "MIT",
