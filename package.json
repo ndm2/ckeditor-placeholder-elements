@@ -1,4 +1,17 @@
 {
+  "name": "@ndm2/ckeditor-placeholder-elements",
+  "version": "1.0.5",
+  "author": "Oliver Nowak <info@nowak-media.de>",
+  "keywords": ["ckeditor", "ckeditor4", "ckeditor 4", "placeholders"],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ndm2/ckeditor-placeholder-elements/issues"
+  },
+  "homepage": "https://github.com/ndm2/ckeditor-placeholder-elements",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ndm2/ckeditor-placeholder-elements.git"
+  },
   "devDependencies": {
     "bower": "~1.8.14",
     "grunt": "~1.5.2",
