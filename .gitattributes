@@ -4,4 +4,3 @@
 .travis.yml export-ignore
 composer.json export-ignore
 Gruntfile.js export-ignore
-package.json export-ignore
