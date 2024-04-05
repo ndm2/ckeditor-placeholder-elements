@@ -26,7 +26,13 @@ This plugins requires CKEditor 4.3+ and the following plugins:
 
 You can either
 
-* use [Bower](http://bower.io)
+* use [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (and copy the files into
+  `ckeditor/plugins/placeholder_elements/`)
+  ```bash
+  $ npm i @ndm2/ckeditor-placeholder-elements
+  ```
+
+* [Bower](http://bower.io)
   ```bash
   $ bower install ndm2-ckeditor-placeholder-elements
   ```
@@ -118,7 +124,7 @@ config.placeholder_elements = {
 	startDelimiter: '{',
 
 	// Defines the delimiter that indicates the end of a placeholder
-	endDelimiter: '}'
+	endDelimiter: '}',
 
 	/**
 	 * Defines the type of UI element that holds the placeholders. Either
